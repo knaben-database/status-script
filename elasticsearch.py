@@ -1,9 +1,20 @@
+from urllib import request, parse
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
+import time
+import json
 
 
 class Elasticsearch:
     up = False
+    ms = 0
+    speed_percentage = 0.0
+
+    __ms_range = {
+        "min": 100,
+        "max": 5000,
+        "down": 15000
+    }
 
     __host = "http://127.0.0.1:9200"
     __hosts = [
@@ -15,6 +26,51 @@ class Elasticsearch:
 
     def __init__(self):
         self.up = self.__check_basics()
+
+    def check(self):
+        self.up = self.__check_basics()
+        if not self.up:
+            return
+
+        query = {
+            "_source": False,
+            "query": {
+                "query_string": {
+                    "query": "test"
+                }
+            }
+        }
+        url = self.__host + "/" + self.__db + "/_doc/_search"
+        data = bytes(json.dumps(query).encode('utf-8'))
+        start = time.time()
+        req = Request(url, data=data, method="POST", headers={
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36',
+            'content-type': 'application/json'
+        })
+        try:
+            r = urlopen(req, timeout=16)
+            response = json.loads(r.read().decode('utf-8'))
+        except HTTPError as e:
+            print("Failed to connect to: ", url)
+            print('Error code: ', e.code)
+            self.up = False
+        except URLError as e:
+            print("Failed to reach server: ", url)
+            print('Reason: ', e.reason)
+            self.up = False
+        else:
+            if len(response) > 0:
+                self.up = True
+            else:
+                self.up = False
+        end = time.time()
+        time_took = (end - start) * 1000
+        self.ms = time_took
+
+        # Updating speed percentage
+        if time_took > self.__ms_range["down"]:
+            self.up = False
+        self.speed_percentage = (self.__ms_range["max"] - max(time_took - self.__ms_range["min"], 0)) / self.__ms_range["max"]
 
     # Private functions
     def __check_basics(self):
