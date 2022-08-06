@@ -13,7 +13,7 @@ class Color:
         elif type(color) == str:  # Assuming hex
             color = color.lstrip("#")
             if len(color) == 6:  # Assuming #343434 something
-                colors = [color[i:i+2] for i in range(0, len(color), 2)]
+                colors = [color[i:i + 2] for i in range(0, len(color), 2)]
                 self.red = int("0x" + colors[0], 16)
                 self.green = int("0x" + colors[1], 16)
                 self.blue = int("0x" + colors[2], 16)
@@ -27,6 +27,13 @@ class Color:
 
 
 def colorsBetween(from_color, to_color, percentage):
+    """
+    A function that returns the color in between 2 colors with a given percentage
+    :param from_color: str, Color
+    :param to_color: str, Color
+    :param percentage: float
+    :return: string
+    """
     color1 = Color(from_color)
     color2 = Color(to_color)
 

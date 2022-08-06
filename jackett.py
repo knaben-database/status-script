@@ -1,3 +1,4 @@
+import itertools
 import json
 import os
 import time
@@ -15,6 +16,23 @@ def is_json(myjson):
         return False
     return True
 
+
+def lstrip_non_alnum(string):
+    """
+    Strips away non-alphabetic at the beginning
+    :param string: value to strip, eg: *:'-value
+    :return: str
+    """
+    string = "".join(itertools.dropwhile(lambda x: not x.isalnum(), string))
+    return string.lstrip()
+
+def single_spaces(string):
+    """
+    Removes all multiple spaces next to each other, and returns 1 space instead.
+    :param string: value to change, eg: "  some    thing   ok   "
+    :return: str
+    """
+    return ' '.join(string.split()).strip()
 
 class Jackett:
     up = False
@@ -73,7 +91,8 @@ class Jackett:
         self.up = found_working
 
         # Updating speed percentage
-        self.speed_percentage = (self.__ms_range["max"] - max(self.ms - self.__ms_range["min"], 0)) / self.__ms_range["max"]
+        self.speed_percentage = (self.__ms_range["max"] - max(self.ms - self.__ms_range["min"], 0)) / self.__ms_range[
+            "max"]
 
     def __test(self):
         longest_time = {
@@ -120,7 +139,8 @@ class Jackett:
                 time_took = (time.time() - start) * 1000
                 self.__indexers[c]["ms"] = time_took
                 self.__indexers[c]["up"] = False
-                self.__indexers[c]["last_error"] = index["name"] + " Gave a non-200 response: Code " + str(response.getcode())
+                self.__indexers[c]["last_error"] = index["name"] + " Gave a non-200 response: Code " + str(
+                    response.getcode())
                 c += 1
                 continue
 
@@ -148,9 +168,11 @@ class Jackett:
                 continue
             cats = []
             for cat in index["caps"]:
-                #print("Comparing: " + str(cat["Name"].encode("ascii", "ignore")) + " > " + str(cat["Name"].encode("utf-8")))
+                # print("Comparing: " + str(cat["Name"].encode("ascii", "ignore")) + " > " + str(cat["Name"].encode("utf-8")))
                 if len(cat["Name"].encode("utf-8")) > len(cat["Name"].encode("ascii", "ignore")):
                     continue
+                cat["Name"] = lstrip_non_alnum(cat["Name"])
+                cat["Name"] = single_spaces(cat["Name"])
                 cats.append(cat)
             index["caps"] = cats
             new_indexes.append(index)

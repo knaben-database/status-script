@@ -33,15 +33,15 @@ elasticsearch = Elasticsearch()
 for x in range(1):
     # Checking proxies
     proxy.check()
-    statusJSON["services"]["proxy"]["info_color"] = colorsBetween("#FF0000", "#00FF00", proxy.speed_percentage)
+    statusJSON["services"]["proxy"]["info_color"] = colorsBetween("#FF0000", "#38BF38", proxy.speed_percentage)
     statusJSON["services"]["proxy"]["up"] = proxy.up
     # Checking database
     elasticsearch.check()
-    statusJSON["services"]["database"]["info_color"] = colorsBetween("#FF0000", "#00FF00", elasticsearch.speed_percentage)
+    statusJSON["services"]["database"]["info_color"] = colorsBetween("#FF0000", "#38BF38", elasticsearch.speed_percentage)
     statusJSON["services"]["database"]["up"] = elasticsearch.up
     # Checking Jackett
     jackett.check()
-    statusJSON["services"]["livesearch"]["info_color"] = colorsBetween("#FF0000", "#00FF00", jackett.speed_percentage)
+    statusJSON["services"]["livesearch"]["info_color"] = colorsBetween("#FF0000", "#38BF38", jackett.speed_percentage)
     statusJSON["services"]["livesearch"]["up"] = jackett.up
 
     print()
