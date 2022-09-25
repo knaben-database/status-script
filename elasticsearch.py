@@ -22,7 +22,7 @@ class Elasticsearch:
         "http://192.168.1.137:9200"
     ]
 
-    __db = "torrent_cache2"
+    __db = "torrent_cache"
 
     def __init__(self):
         self.up = self.__check_basics()

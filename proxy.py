@@ -20,6 +20,8 @@ class Proxy:
     __json = []
     __path = ""
 
+    __chosen = ""
+
     def __init__(self, path):
         if not os.path.exists(path):
             self.up = False
@@ -59,6 +61,10 @@ class Proxy:
                 print("Failed to reach server: ", url)
                 print('Reason: ', e.reason)
                 proxies[c]["working"] = False
+            except TimeoutError as e:
+                print("Failed to reach server: ", url)
+                print('Reason: ', "Timeout")
+                proxies[c]["working"] = False
             else:
                 if proxy["look_for"] in response:
                     proxies[c]["working"] = True
@@ -75,11 +81,19 @@ class Proxy:
                 if not found_working:
                     self.ms = proxy["ms"]
                     self.speed_percentage = (self.__ms_range["max"] - max(proxy["ms"] - self.__ms_range["min"], 0)) / self.__ms_range["max"]
+                    self.__chosen = proxy["url"]
+                    print("Chosen       ↓↓↓")
+                print("Working: " + proxy["url"])
                 found_working = True
+            else:
+                print("DOWN: " + proxy["url"])
         self.up = found_working
         proxy_json["proxies"] = proxies
         proxy_json["last_updated"] = int(time.time())
         self.__save_json(proxy_json)
+
+    def getSelected(self) -> str:
+        return self.__chosen
 
     def __load_json(self):
         f = open(self.__path, "r")

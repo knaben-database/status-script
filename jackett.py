@@ -1,6 +1,7 @@
 import itertools
 import json
 import os
+import socket
 import time
 import subprocess
 from urllib.request import Request, urlopen
@@ -48,7 +49,8 @@ class Jackett:
     __host = "http://127.0.0.1:9117"
     __hosts = [
         "http://127.0.0.1:9117",
-        "http://192.168.1.137:9117"
+        "http://192.168.1.137:9117",
+        "http://127.0.0.1:9111"
     ]
 
     __passLoc = "/mnt/incognito/Documents/default2.tyx"
@@ -91,8 +93,21 @@ class Jackett:
         self.up = found_working
 
         # Updating speed percentage
-        self.speed_percentage = (self.__ms_range["max"] - max(self.ms - self.__ms_range["min"], 0)) / self.__ms_range[
-            "max"]
+        self.speed_percentage = (self.__ms_range["max"] - max(self.ms - self.__ms_range["min"], 0)) / self.__ms_range["max"]
+
+    def getIndexers(self):
+        indexers = []
+        for index in self.__indexers:
+            if not index["configured"]:
+                continue
+            indexers.append({
+                "name": index["name"],
+                "up": index["up"],
+                "error": index["last_error"],
+                "ms": index["ms"]
+            })
+        return indexers
+
 
     def __test(self):
         longest_time = {
@@ -131,6 +146,15 @@ class Jackett:
                 self.__indexers[c]["ms"] = time_took
                 self.__indexers[c]["up"] = False
                 self.__indexers[c]["last_error"] = e.reason
+                c += 1
+                continue
+            except socket.timeout as e:
+                print("(Failed)\nFailed to reach server: ", url)
+                print('Reason: Timeout')
+                time_took = (time.time() - start) * 1000
+                self.__indexers[c]["ms"] = time_took
+                self.__indexers[c]["up"] = False
+                self.__indexers[c]["last_error"] = "Timeout"
                 c += 1
                 continue
 
