@@ -34,8 +34,10 @@ def percentageToInfo(percentage):
     if percentage > 0.8:
         return "Running"
     elif percentage > 0.6:
+        return "Running"
+    elif percentage > 0.4:
         return "Running slow"
-    elif percentage > 0.3:
+    elif percentage > 0.25:
         return "Running VERY slow"
     else:
         return "Running VERY slow, be patient!"

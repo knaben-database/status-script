@@ -1,4 +1,5 @@
 import json
+import socket
 import time
 import os
 from urllib.request import Request, urlopen
@@ -62,6 +63,10 @@ class Proxy:
                 print('Reason: ', e.reason)
                 proxies[c]["working"] = False
             except TimeoutError as e:
+                print("Failed to reach server: ", url)
+                print('Reason: ', "Timeout")
+                proxies[c]["working"] = False
+            except socket.timeout as e:
                 print("Failed to reach server: ", url)
                 print('Reason: ', "Timeout")
                 proxies[c]["working"] = False
