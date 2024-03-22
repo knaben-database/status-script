@@ -236,11 +236,11 @@ class Jackett:
 
     # Checking if the connection is up
     def __touch_connection(self, host):
-        req = Request(host, method="HEAD")
+        req = Request(host + "/health", method="HEAD")
         try:
             response = urlopen(req, timeout=16)
         except HTTPError as e:
-            print("Failed to connect to: ", host)
+            print("(Touch connection) Failed to connect to: ", host)
             print('Error code: ', e.code)
             return False
         except URLError as e:

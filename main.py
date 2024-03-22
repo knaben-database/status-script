@@ -44,38 +44,38 @@ def percentageToInfo(percentage):
 
 
 # /mnt/incognito/var/www/pi2/python/status-script
-scriptPath = os.path.dirname(os.path.realpath(__file__))
+SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # /mnt/incognito/var/www/pi2
-document_root = scriptPath + "/../.."
-statusPath = document_root + "/json/status.json"
+DOCUMENT_ROOT = SCRIPT_PATH + "/../.."
+STATUS_PATH = DOCUMENT_ROOT + "/json/status.json"
 
 # Loading classes
-proxy = Proxy(document_root + "/json/proxies.json")
-jackett = Jackett(document_root + "/json/indexers.json")
+proxy = Proxy(DOCUMENT_ROOT + "/json/proxies.json")
+jackett = Jackett(DOCUMENT_ROOT + "/json/indexers.json")
 elasticsearch = Elasticsearch()
 
 while True:
     # Loading status json
-    statusJSON: json = load_json(statusPath)
+    statusJSON: json = load_json(STATUS_PATH)
 
     # Checking proxies
     proxy.check()
-    statusJSON["services"]["proxy"]["info_color"] = colorsBetween("#FF0000", "#38BF38", proxy.speed_percentage)
+    statusJSON["services"]["proxy"]["info_color"] = colorsBetween("#FF0000", "#38BF38", proxy.speed_percentage) if proxy.up else "#FF0000"
     statusJSON["services"]["proxy"]["info"] = percentageToInfo(proxy.speed_percentage) if proxy.up else "Offline"
     statusJSON["services"]["proxy"]["up"] = proxy.up
     statusJSON["services"]["proxy"]["ms"] = proxy.ms
 
     # Checking database
     elasticsearch.check()
-    statusJSON["services"]["database"]["info_color"] = colorsBetween("#FF0000", "#38BF38", elasticsearch.speed_percentage)
+    statusJSON["services"]["database"]["info_color"] = colorsBetween("#FF0000", "#38BF38", elasticsearch.speed_percentage) if elasticsearch.up else "#FF0000"
     statusJSON["services"]["database"]["info"] = percentageToInfo(elasticsearch.speed_percentage) if elasticsearch.up else "Offline"
     statusJSON["services"]["database"]["up"] = elasticsearch.up
     statusJSON["services"]["database"]["ms"] = elasticsearch.ms
 
     # Checking Jackett
     jackett.check()
-    statusJSON["services"]["livesearch"]["info_color"] = colorsBetween("#FF0000", "#38BF38", jackett.speed_percentage)
+    statusJSON["services"]["livesearch"]["info_color"] = colorsBetween("#FF0000", "#38BF38", jackett.speed_percentage) if jackett.up else "#FF0000"
     statusJSON["services"]["livesearch"]["info"] = percentageToInfo(jackett.speed_percentage) if jackett.up else "Offline"
     statusJSON["services"]["livesearch"]["up"] = jackett.up
     statusJSON["services"]["livesearch"]["ms"] = jackett.ms
@@ -110,7 +110,7 @@ while True:
         c += 1
 
     # Saving result
-    save_json(statusPath, statusJSON)
+    save_json(STATUS_PATH, statusJSON)
 
     # ZZZZZZZzzzzzzzzzzzZZZZZZZZZZzz
     print("\nZZZZZZZzzzzzzzzzzzZZZZZZZZZZzz")
