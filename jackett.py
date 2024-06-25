@@ -41,7 +41,7 @@ class Jackett:
     speed_percentage = 0.0
 
     __ms_range = {
-        "min": 2000,
+        "min": 4000,
         "max": 10000,
         "down": 16000
     }
