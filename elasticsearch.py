@@ -40,7 +40,7 @@ class Elasticsearch:
                 }
             }
         }
-        url = self.__host + "/" + self.__db + "/_doc/_search"
+        url = self.__host + "/" + self.__db + "/_search"
         data = bytes(json.dumps(query).encode('utf-8'))
         start = time.time()
         req = Request(url, data=data, method="POST", headers={
