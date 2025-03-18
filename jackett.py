@@ -59,6 +59,9 @@ class Jackett:
         "/home/***REMOVED***/Documents/default2.tyx"
     ]
 
+    # These will be grabbed using the __login function
+    __config = {}
+    __api_key = ""
     __cookie = {"name": "Jackett", "value": ""}
 
     __full_indexers = {}
@@ -115,6 +118,7 @@ class Jackett:
             "ms": 0
         }
 
+        # Using the built in /test/ api for the indexers
         c = 0
         for index in self.__indexers:
             url = self.__host + "/api/v2.0/indexers/" + index["id"] + "/test"
@@ -182,6 +186,98 @@ class Jackett:
         print("Slowest indexer: " + longest_time["name"] + " of " + str(int(longest_time["ms"])) + " ms")
         self.ms = longest_time["ms"]
 
+
+        # Actually testing a search
+        c = 0
+        for index in self.__indexers:
+            if self.__indexers[c]["up"] == False:
+                continue
+
+            test_query = "test"
+            url = f"{self.__host}/api/v2.0/indexers/all/results?apikey={self.__api_key}&Query={test_query}&Tracker[]={index['id']}&_=" + str(int(time.time() * 1000))
+            print("Testing searching: " + index["name"] + " ...", end=" ")
+
+            req = Request(url, method="GET")
+            req.add_header("Cookie", self.__cookie["name"] + "=" + self.__cookie["value"])
+            try:
+                response = urlopen(req, timeout=16)
+            except HTTPError as e:
+                print("(Failed)\nFailed to connect to: ", url)
+                print('Error code:', e.code)
+                time_took = (time.time() - start) * 1000
+                self.__indexers[c]["up"] = False
+                error = e.read().decode("utf-8")
+                if is_json(error) and "error" in json.loads(error):
+                    JSON = json.loads(error)
+                    self.__indexers[c]["last_error"] = JSON["error"]
+                else:
+                    self.__indexers[c]["last_error"] = str(e.code)
+                c += 1
+                continue
+            except URLError as e:
+                print("(Failed)\nFailed to reach server: ", url)
+                print('Reason:', e.reason)
+                time_took = (time.time() - start) * 1000
+                self.__indexers[c]["up"] = False
+                self.__indexers[c]["last_error"] = e.reason
+                c += 1
+                continue
+            except socket.timeout as e:
+                print("(Failed)\nFailed to reach server: ", url)
+                print('Reason: Timeout')
+                time_took = (time.time() - start) * 1000
+                self.__indexers[c]["up"] = False
+                self.__indexers[c]["last_error"] = "Timeout"
+                c += 1
+                continue
+
+            if 200 > response.getcode() or response.getcode() >= 300:
+                print("(Failed)\n" + index["name"] + " Gave a non-200 response: Code " + str(response.getcode()))
+                time_took = (time.time() - start) * 1000
+                self.__indexers[c]["up"] = False
+                self.__indexers[c]["last_error"] = index["name"] + " Gave a non-200 response: Code " + str(
+                    response.getcode())
+                c += 1
+                continue
+
+            content = response.read().decode("utf-8")
+            if not is_json(content):
+                print("(Failed)\nResponse is not JSON")
+                self.__indexers[c]["up"] = False
+                self.__indexers[c]["last_error"] = "Response is not JSON: " + content
+                c += 1
+                continue
+
+            json_content = json.loads(content)
+            if len(json_content["Indexers"]) == 0:
+                print("(Failed)\nThere is no indexers in response")
+                self.__indexers[c]["up"] = False
+                self.__indexers[c]["last_error"] = 'No indexers in response content["Indexers"]: ' + content
+                c += 1
+                continue
+
+            # 0 = Unknown, 1 = Error, 2 = OK
+            # https://github.com/Jackett/Jackett/blob/579683713362fc8a0fb2f54db1b596566930570f/src/Jackett.Common/Models/DTO/ManualSearchResult.cs#L7
+            if json_content["Indexers"][0]["Status"] != 2:
+                print("(Failed)\nIndexer gave status response code " + str(json_content["Indexers"][0]["Status"]), end="")
+                if json_content["Indexers"][0]["Status"] == 0:
+                    print(" UNKNOWN")
+                if json_content["Indexers"][0]["Status"] == 1:
+                    print(" ERROR")
+                print()
+                self.__indexers[c]["up"] = False
+                if json_content["Indexers"][0]["Error"] is not None:
+                    self.__indexers[c]["last_error"] = 'Indexer search gave non-2 response: ' + json_content["Indexers"][0]["Error"]
+                else:
+                    self.__indexers[c]["last_error"] = 'Indexer search gave non-2 response: ' + content
+
+                c += 1
+                continue
+
+            self.__indexers[c]["up"] = True
+            print("(OK)")
+            c += 1
+
         # Save the result
         self.__save_json(self.__indexers)
 
@@ -233,6 +329,7 @@ class Jackett:
         self.up = self.__check_basics()
         if self.up:
             self.__login()
+            self.__load_config()
 
     # Checking if the connection is up
     def __touch_connection(self, host):
@@ -282,7 +379,35 @@ class Jackett:
 
         return True
 
+    def __load_config(self):
+        print("Loading config...")
+        if self.__cookie["value"] == "":
+            self.__login()
+
+        url = self.__host + '/api/v2.0/server/config?_=' + str(int(time.time() * 1000))
+        req = Request(url, method="GET")
+        req.add_header("Cookie", self.__cookie["name"] + "=" + self.__cookie["value"])
+        try:
+            response = urlopen(req, timeout=16)
+        except HTTPError as e:
+            print("Failed to connect to: ", url)
+            print('Error code: ', e.code)
+            return
+        except URLError as e:
+            print("Failed to reach server: ", url)
+            print('Reason: ', e.reason)
+            return
+
+        content = response.read().decode("utf-8")
+        if not is_json(content):
+            return
+
+        self.__config = json.loads(content)
+        self.__api_key = self.__config["api_key"]
+
+
     def __login(self):
+        print("Signing in...")
         passw = subprocess.run(['detyx', '-j', self.__passLoc],
                                stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
         passw = bytes.fromhex(passw).decode('utf-8')
