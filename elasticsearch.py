@@ -67,6 +67,7 @@ class Elasticsearch:
             if len(response) > 0:
                 self.up = True
             else:
+                print("Zero responses trying to search for \"test\":", url)
                 self.up = False
         end = time.time()
         time_took = (end - start) * 1000
