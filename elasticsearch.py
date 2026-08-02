@@ -12,14 +12,18 @@ class Elasticsearch:
 
     __ms_range = {
         "min": 100,
-        "max": 5000,
+        "max": 500,
         "down": 15000
     }
 
     __host = "http://127.0.0.1:9200"
     __hosts = [
+        # If the script is running on the host
         "http://127.0.0.1:9200",
-        "http://192.168.1.137:9200"
+        # Connecting from local server
+        "http://192.168.1.137:9200",
+        # for kubernetes
+        "http://elasticsearch:9200",
     ]
 
     __db = "torrent_cache"

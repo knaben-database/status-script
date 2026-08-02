@@ -11,6 +11,41 @@ from proxy import Proxy
 from elasticsearch import Elasticsearch
 from colors import colorsBetween, Color
 
+def generate_json():
+    return {
+      "services": {
+        "proxy": {
+          "name": "Proxy",
+          "up": True,
+          "info": "Unknown",
+          "info_color": "#666666",
+          "ms": 57.90209770202637
+        },
+        "database": {
+          "name": "Database",
+          "up": True,
+          "info": "Unknown",
+          "info_color": "#666666",
+          "ms": 6.021022796630859
+        },
+        "livesearch": {
+          "name": "Live Search",
+          "up": True,
+          "info": "Unknown",
+          "info_color": "#666666",
+          "ms": 3938.007593154907
+        },
+        "caching": {
+          "name": "Caching",
+          "up": True,
+          "info": "Unknown",
+          "info_color": "#666666",
+          "ms": None
+        }
+      },
+      "description": "",
+      "last_checked": int(time.time())
+    }
 
 def load_json(path):
     f = open(path)
@@ -58,7 +93,10 @@ elasticsearch = Elasticsearch()
 
 while True:
     # Loading status json
-    statusJSON: json = load_json(STATUS_PATH)
+    if not os.path.exists(STATUS_PATH):
+        statusJSON: json = generate_json()
+    else:
+        statusJSON: json = load_json(STATUS_PATH)
 
     # Checking proxies
     proxy.check()
