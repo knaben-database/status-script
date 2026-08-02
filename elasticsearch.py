@@ -3,6 +3,7 @@ from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 import time
 import json
+import os
 
 
 class Elasticsearch:
@@ -26,7 +27,7 @@ class Elasticsearch:
         "http://elasticsearch:9200",
     ]
 
-    __db = "torrent_cache"
+    __db = os.environ.get("ELASTICSEARCH_TORRENT_INDEX", "torrent_cache")
 
     def __init__(self):
         self.up = self.__check_basics()
