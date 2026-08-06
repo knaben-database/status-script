@@ -87,7 +87,7 @@ SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 STATUS_PATH = os.environ.get("STATUS_PATH", "/shared-data/status.json")
 
 # Loading classes
-proxy = Proxy("/shared-data/proxies.json")
+proxy = Proxy(os.environ.get("PROXIES_PATH", "/shared-data/proxies.json"))
 jackett = Jackett("/shared-data/indexers.json")
 elasticsearch = Elasticsearch()
 

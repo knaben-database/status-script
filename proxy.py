@@ -2,9 +2,62 @@ import json
 import socket
 import time
 import os
+from json import JSONDecodeError
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 
+def generate_json():
+    return {
+      "proxies": [
+        {
+          "url": "thepiratebay0.org",
+          "https": True,
+          "type": "old",
+          "api": False,
+          "api_url": None,
+          "working": True,
+          "ms": 59.08679962158203,
+          "priority": 1,
+          "look_for": "/\" title=\"Browse "
+        },
+        {
+          "url": "thepiratebay.org",
+          "https": True,
+          "type": "new",
+          "api": True,
+          "api_url": "https://apibay.org",
+          "working": True,
+          "ms": 35.23087501525879,
+          "priority": 2,
+          "look_for": ",\"name\":\""
+        },
+        {
+          "url": "thepiratebay10.org",
+          "https": True,
+          "type": "old",
+          "api": False,
+          "api_url": None,
+          "working": True,
+          "ms": 121.93036079406738,
+          "priority": 3,
+          "look_for": "/\" title=\"Browse "
+        },
+        {
+          "url": "thehiddenbay.com",
+          "https": True,
+          "type": "old",
+          "api": False,
+          "api_url": None,
+          "working": True,
+          "ms": 227.21529006958008,
+          "priority": 4,
+          "look_for": "/\" title=\"Browse "
+        }
+      ],
+      "last_updated": 1786046774
+    }
+
+PROXY_PATH = os.environ.get("PROXIES_PATH", "/shared-data/proxies.json")
 
 # This is for TPB proxies
 class Proxy:
@@ -28,15 +81,12 @@ class Proxy:
             self.up = False
             return
         self.__path = path
-        self.__json = self.__load_json()
 
     def check(self):
-        if not os.path.exists(self.__path):
-            self.up = False
-            print(self.__path + " was not found!")
-            return
-
-        proxy_json = self.__load_json()
+        if not is_json(self.__path):
+            proxy_json = generate_json()
+        else:
+            proxy_json = self.__load_json()
         proxies = proxy_json["proxies"]
         proxies.sort(key=lambda JSON: JSON["priority"])
         c = 0
@@ -110,3 +160,15 @@ class Proxy:
         out_file = open(self.__path, "w")
         json.dump(content, out_file, indent=4)
         out_file.close()
+
+def is_json(path) -> bool:
+    if not os.path.exists(path):
+        return False
+    try:
+        with open(path, "r") as f:
+            JSON = json.load(f)
+            f.close()
+            return True
+        return False
+    except JSONDecodeError:
+        return False
