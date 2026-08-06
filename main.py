@@ -38,8 +38,8 @@ def generate_json():
         "caching": {
           "name": "Caching",
           "up": True,
-          "info": "Unknown",
-          "info_color": "#666666",
+          "info": "Running",
+          "info_color": "#38bf38",
           "ms": None
         }
       },
