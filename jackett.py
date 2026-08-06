@@ -50,9 +50,11 @@ class Jackett:
     __hosts = [
         "http://127.0.0.1:9117",
         "http://192.168.1.137:9117",
-        "http://127.0.0.1:9111"
+        "http://127.0.0.1:9111",
+        "http://jackett:9117"
     ]
 
+    __pass_env = os.environ.get("JACKETT_PASSWORD_OBSCURED")
     __passLoc = "/mnt/incognito/Documents/default2.tyx"
     __passLocs = [
         "/mnt/incognito/Documents/default2.tyx",
@@ -345,6 +347,7 @@ class Jackett:
             print('Reason: ', e.reason)
             return False
         else:
+            print("Success testing: ", host)
             return True
 
     # Checking if the password file exists
@@ -363,19 +366,16 @@ class Jackett:
         if not success:
             return False
 
-        # Checking file locations
-        success = False
-        for loc in self.__passLocs:
-            if self.__touch_file(loc):
-                self.__passLoc = loc
-                success = True
-                break
-        if not success:
-            return False
-
-        # Checking save location
-        if not self.__touch_file(self.__save_path):
-            return False
+        if not self.__pass_env:
+            # Checking for password file if the env is not set
+            success = False
+            for loc in self.__passLocs:
+                if self.__touch_file(loc):
+                    self.__passLoc = loc
+                    success = True
+                    break
+            if not success:
+                return False
 
         return True
 
@@ -408,7 +408,10 @@ class Jackett:
 
     def __login(self):
         print("Signing in...")
-        passw = subprocess.run(['detyx', '-j', self.__passLoc],
+        if self.__pass_env:
+            passw = self.__pass_env
+        else:
+            passw = subprocess.run(['detyx', '-j', self.__passLoc],
                                stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
         passw = bytes.fromhex(passw).decode('utf-8')
         passw = passw[::-1]
