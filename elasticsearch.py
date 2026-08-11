@@ -12,8 +12,8 @@ class Elasticsearch:
     speed_percentage = 0.0
 
     __ms_range = {
-        "min": 100,
-        "max": 500,
+        "min": 50,
+        "max": 200,
         "down": 15000
     }
 
