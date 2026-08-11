@@ -82,13 +82,13 @@ def percentageToInfo(percentage):
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # /mnt/incognito/var/www/pi2
-#DOCUMENT_ROOT = SCRIPT_PATH + "/../.."
+DOCUMENT_ROOT = SCRIPT_PATH + "/../.."
 #STATUS_PATH = DOCUMENT_ROOT + "/json/status.json"
-STATUS_PATH = os.environ.get("STATUS_PATH", "/shared-data/status.json")
+STATUS_PATH = os.environ.get("STATUS_PATH", DOCUMENT_ROOT + "/json/status.json")
 
 # Loading classes
-proxy = Proxy(os.environ.get("PROXIES_PATH", "/shared-data/proxies.json"))
-jackett = Jackett("/shared-data/indexers.json")
+proxy = Proxy(os.environ.get("PROXIES_PATH", DOCUMENT_ROOT + "/json/proxies.json"))
+jackett = Jackett(os.environ.get("INDEXERS_PATH", DOCUMENT_ROOT + "/json/indexers.json"))
 elasticsearch = Elasticsearch()
 
 while True:

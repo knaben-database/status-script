@@ -64,6 +64,7 @@ class Elasticsearch:
             print('Reason: ', e.reason)
             self.up = False
         else:
+            # TODO: What is even being checked here??
             if len(response) > 0:
                 self.up = True
             else:
